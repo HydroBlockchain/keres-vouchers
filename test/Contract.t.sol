@@ -34,17 +34,20 @@ contract StakingTest is Test {
         stake.exit();
         stake.checkCurrentRewards(address(this));
         stake.viewUser(address(this));
-        stake.stake(1000e18);
+
+        vm.warp(block.timestamp + 7 days);
+        stake.claimHydro();
+        // stake.stake(1000e18);
         stake.viewUser(address(this));
         //  stake.checkCurrentRewards(address(this));
-        vm.warp(block.timestamp + 1200000);
-        //vm.warp(1200000);
-        stake.checkCurrentRewards(address(this));
-        stake.viewUser(address(this));
-        emit log_uint(block.timestamp);
-        stake.withdrawFunds(100e18);
-        stake.checkCurrentRewards(address(this));
-        stake.viewUser(address(this));
-        stake.totalHydroStaked();
+        // vm.warp(block.timestamp + 1200000);
+        // //vm.warp(1200000);
+        // stake.checkCurrentRewards(address(this));
+        // stake.viewUser(address(this));
+        // emit log_uint(block.timestamp);
+        // stake.withdrawFunds(100e18);
+        // stake.checkCurrentRewards(address(this));
+        // stake.viewUser(address(this));
+        // stake.totalHydroStaked();
     }
 }
