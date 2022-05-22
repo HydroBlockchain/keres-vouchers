@@ -4,23 +4,23 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "../src/Staking.sol";
 import "../src/mockHydro.sol";
-import "../src/mockKVS.sol";
+import "../src/KVS.sol";
 import "../lib/forge-std/src/Vm.sol";
 import {IERC20} from "oz/contracts/token/ERC20/ERC20.sol";
 
 contract StakingTest is Test {
     MockHydro hydro;
-    MockKVS KVS;
+    KVS kvs;
     KVSStaking stake;
 
     function setUp() public {
         //deploy tokens
         hydro = new MockHydro();
-        KVS = new MockKVS();
+        kvs = new KVS();
 
         //deploy staker
-        stake = new KVSStaking(address(hydro), address(KVS));
-        IERC20(KVS).transfer(address(stake), 1000e18);
+        stake = new KVSStaking(address(hydro), address(kvs));
+        IERC20(kvs).transfer(address(stake), 1000e18);
         stake.toggleStake(true);
     }
 
@@ -37,15 +37,19 @@ contract StakingTest is Test {
 
         vm.warp(block.timestamp + 7 days);
         stake.claimHydro();
-        // stake.stake(1000e18);
+        //
         stake.viewUser(address(this));
-        //  stake.checkCurrentRewards(address(this));
-        // vm.warp(block.timestamp + 1200000);
+        stake.stake(1000e18);
+        stake.checkCurrentRewards(address(this));
+        vm.warp(block.timestamp + 1000);
         // //vm.warp(1200000);
-        // stake.checkCurrentRewards(address(this));
+        stake.checkCurrentRewards(address(this));
         // stake.viewUser(address(this));
         // emit log_uint(block.timestamp);
-        // stake.withdrawFunds(100e18);
+        stake.withdrawFunds(100e18);
+        // stake.claimHydro();
+        vm.warp(block.timestamp + 7 days);
+        stake.claimHydro();
         // stake.checkCurrentRewards(address(this));
         // stake.viewUser(address(this));
         // stake.totalHydroStaked();

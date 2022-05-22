@@ -164,12 +164,13 @@ contract KVSStaking is Ownable, ReentrancyGuard {
 
     function claimHydro() public {
         User storage u = userStakeData[msg.sender];
+        uint256 amount = u.requests.amount;
         require(block.timestamp >= u.requests.releaseAt, "Cannot release yet");
-        require(IERC20(hydro).transfer(msg.sender, u.requests.amount));
+        require(IERC20(hydro).transfer(msg.sender, amount));
         //reset vals
         u.requests.amount = 0;
         u.requests.pending = false;
-        emit HydroClaimed(msg.sender, u.requests.amount);
+        emit HydroClaimed(msg.sender, amount);
     }
 
     function totalHydroStaked() public view returns (uint) {
