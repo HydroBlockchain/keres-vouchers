@@ -12,6 +12,7 @@ contract KVSStaking is Ownable, ReentrancyGuard {
     address immutable hydro;
     address immutable KVS;
     uint256 constant MAX_RATE = 4308750000000; //0.00000430875/min
+    uint256 constant delta = 17658811475;
     uint256 currentRate;
     uint256 totalStaked;
     bool stakeActive;
@@ -183,5 +184,10 @@ contract KVSStaking is Ownable, ReentrancyGuard {
 
     function modifyRate(uint256 _newRate) public onlyOwner {
         currentRate = _newRate;
+    }
+
+    //current rate/10e5
+    function checkAPY() public view returns (uint apy) {
+        apy = (currentRate * 10e5) / delta;
     }
 }

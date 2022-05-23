@@ -25,12 +25,15 @@ contract StakingTest is Test {
     }
 
     function testStake() public {
+        stake.checkCurrentRate();
+        stake.checkAPY();
         IERC20(address(hydro)).approve(address(stake), 100000000000e18);
         stake.stake(1000e18);
         //13days
         vm.warp(1200000);
         uint256 total = stake.checkCurrentRewards(address(this));
         stake.checkCurrentRate();
+        stake.checkAPY();
         stake.exit();
         stake.checkCurrentRewards(address(this));
         stake.viewUser(address(this));
@@ -50,8 +53,11 @@ contract StakingTest is Test {
         // stake.claimHydro();
         vm.warp(block.timestamp + 7 days);
         stake.claimHydro();
+        stake.checkAPY();
         // stake.checkCurrentRewards(address(this));
         // stake.viewUser(address(this));
         // stake.totalHydroStaked();
+        stake.exit();
+        stake.checkAPY();
     }
 }
