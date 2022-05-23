@@ -80,7 +80,7 @@ contract KVSStaking is Ownable, ReentrancyGuard {
     }
 
     function syncRate(bool dir) internal {
-        uint256 reductionPercentile = (10 * currentRate) / 1000000;
+        uint256 reductionPercentile = (10 * MAX_RATE) / 1000000;
         if (dir) {
             currentRate += reductionPercentile;
         } else {
