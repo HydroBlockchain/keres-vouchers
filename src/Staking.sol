@@ -73,6 +73,7 @@ contract KVSStaking is Ownable, ReentrancyGuard {
         returns (uint256 bonus)
     {
         User memory u = userStakeData[_user];
+        assert(u.amount > 0);
         assert(block.timestamp >= u.checkpoint);
         uint256 minPassed = (block.timestamp - u.checkpoint) / 60;
         uint256 minGen = u.ratePerMin * minPassed;
