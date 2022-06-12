@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
-import {ERC20} from "oz/contracts/token/ERC20/ERC20.sol";
-import {Ownable} from "oz/contracts/access/Ownable.sol";
+import {ERC20} from "../lib/openzeppelin-contracts.git/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "../lib/openzeppelin-contracts.git/contracts/access/Ownable.sol";
 
 contract KVS is ERC20, Ownable {
     error OnlyStakerContract();
-
-    // error OnlyOwner();
 
     constructor() ERC20("Keres Vouchers", "KVS") {
         _mint(msg.sender, 201497100e18);

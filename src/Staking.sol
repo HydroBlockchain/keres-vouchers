@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
-import {IERC20} from "oz/contracts/token/ERC20/ERC20.sol";
-import {Ownable} from "oz/contracts/access/Ownable.sol";
-import "oz/contracts/security/ReentrancyGuard.sol";
+import {IERC20} from "../lib/openzeppelin-contracts.git/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "../lib/openzeppelin-contracts.git/contracts/access/Ownable.sol";
+import "../lib/openzeppelin-contracts.git/contracts/security/ReentrancyGuard.sol";
 
 contract KVSStaking is Ownable, ReentrancyGuard {
     error TransferFailed();
@@ -61,6 +61,14 @@ contract KVSStaking is Ownable, ReentrancyGuard {
             syncRate(false);
             u.ratePerMin = toUse;
         }
+        //send out pending rewards if there are any
+        if (u.amount > 0) {
+            uint256 rewardDebt = checkCurrentRewards(msg.sender);
+            if (rewardDebt > 0) {
+                IERC20(KVS).transfer(msg.sender, rewardDebt);
+                emit KvsMint(msg.sender, rewardDebt);
+            }
+        }
         u.amount += uint184(_amount);
         u.checkpoint = uint72(block.timestamp);
         totalStaked += _amount;
@@ -94,7 +102,7 @@ contract KVSStaking is Ownable, ReentrancyGuard {
         return currentRate;
     }
 
-    function withdrawProfit(uint256 _amount) external {
+    function withdrawProfit(uint256 _amount) external nonReentrant {
         User storage u = userStakeData[msg.sender];
         if (u.amount <= 0) revert NotStaker();
         uint256 rewardDebt = checkCurrentRewards(msg.sender);
@@ -105,7 +113,7 @@ contract KVSStaking is Ownable, ReentrancyGuard {
         emit KvsMint(msg.sender, rewardDebt);
     }
 
-    function exit() external {
+    function exit() external nonReentrant {
         User storage u = userStakeData[msg.sender];
         if (u.amount <= 0) revert NotStaker();
         uint toSend = u.amount;
@@ -116,8 +124,7 @@ contract KVSStaking is Ownable, ReentrancyGuard {
             emit KvsMint(msg.sender, acc);
         }
         u.amount = 0;
-        placeReq(toSend, msg.sender);
-        // require(IERC20(hydro).transfer(msg.sender, toSend));
+        placeReq(toSend);
         syncRate(true);
         totalStaked -= toSend;
         emit StakeRemoved(msg.sender, u.amount);
@@ -131,10 +138,7 @@ contract KVSStaking is Ownable, ReentrancyGuard {
         User storage u = userStakeData[msg.sender];
         if (u.amount <= 0) revert NotStaker();
         if (_amount > u.amount) revert InsufficientAmount();
-        uint toSend = u.amount;
-        placeReq(_amount, msg.sender);
-        //send out debts
-        //  require(IERC20(hydro).transfer(msg.sender, toSend));
+        placeReq(_amount);
         emit StakeRemoved(msg.sender, _amount);
         //send out bonus too
         if (checkCurrentRewards(msg.sender) > 0) {
@@ -155,7 +159,7 @@ contract KVSStaking is Ownable, ReentrancyGuard {
         u.checkpoint = uint72(block.timestamp);
     }
 
-    function placeReq(uint256 amount, address _user) internal {
+    function placeReq(uint256 amount) internal {
         User storage u = userStakeData[msg.sender];
         if (u.requests.pending) revert PendingRequest();
         u.requests.pending = true;
@@ -164,14 +168,15 @@ contract KVSStaking is Ownable, ReentrancyGuard {
         emit HydroRequest(msg.sender, amount, block.timestamp + 7 days);
     }
 
-    function claimHydro() public {
+    function claimHydro() public nonReentrant {
         User storage u = userStakeData[msg.sender];
         uint256 amount = u.requests.amount;
         require(block.timestamp >= u.requests.releaseAt, "Cannot release yet");
-        require(IERC20(hydro).transfer(msg.sender, amount));
         //reset vals
         u.requests.amount = 0;
         u.requests.pending = false;
+        require(IERC20(hydro).transfer(msg.sender, amount));
+
         emit HydroClaimed(msg.sender, amount);
     }
 
@@ -185,6 +190,7 @@ contract KVSStaking is Ownable, ReentrancyGuard {
 
     function modifyRate(uint256 _newRate) public onlyOwner {
         currentRate = _newRate;
+        emit RateUpdated(currentRate);
     }
 
     //current rate/10e5

@@ -6,7 +6,7 @@ import "../src/Staking.sol";
 import "../src/mockHydro.sol";
 import "../src/KVS.sol";
 import "../lib/forge-std/src/Vm.sol";
-import {IERC20} from "oz/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "../lib/openzeppelin-contracts.git/contracts/token/ERC20/IERC20.sol";
 
 contract StakingTest is Test {
     MockHydro hydro;
@@ -20,7 +20,7 @@ contract StakingTest is Test {
 
         //deploy staker
         stake = new KVSStaking(address(hydro), address(kvs));
-        IERC20(kvs).transfer(address(stake), 1000e18);
+        IERC20(kvs).transfer(address(stake), 100e18);
         stake.toggleStake(true);
     }
 
@@ -28,36 +28,40 @@ contract StakingTest is Test {
         stake.checkCurrentRate();
         stake.checkAPY();
         IERC20(address(hydro)).approve(address(stake), 100000000000e18);
-        stake.stake(1000e18);
+        stake.stake(100e18);
         //13days
         vm.warp(1200000);
         uint256 total = stake.checkCurrentRewards(address(this));
         stake.checkCurrentRate();
         stake.checkAPY();
-        stake.exit();
-        stake.checkCurrentRewards(address(this));
-        stake.viewUser(address(this));
-
-        vm.warp(block.timestamp + 7 days);
-        stake.claimHydro();
-        //
-        stake.viewUser(address(this));
+        stake.withdrawFunds(10e18);
+        IERC20(address(hydro)).balanceOf(address(this));
         stake.stake(1000e18);
-        stake.checkCurrentRewards(address(this));
-        vm.warp(block.timestamp + 1000);
-        // //vm.warp(1200000);
-        stake.checkCurrentRewards(address(this));
-        // stake.viewUser(address(this));
-        // emit log_uint(block.timestamp);
-        stake.withdrawFunds(100e18);
-        // stake.claimHydro();
-        vm.warp(block.timestamp + 7 days);
-        stake.claimHydro();
-        stake.checkAPY();
+        stake.withdrawFunds(10e18);
+        // stake.exit();
         // stake.checkCurrentRewards(address(this));
         // stake.viewUser(address(this));
-        // stake.totalHydroStaked();
-        stake.exit();
-        stake.checkAPY();
+
+        // vm.warp(block.timestamp + 7 days);
+        // stake.claimHydro();
+        // //
+        // stake.viewUser(address(this));
+        // stake.stake(1000e18);
+        // stake.checkCurrentRewards(address(this));
+        // vm.warp(block.timestamp + 1000);
+        // // //vm.warp(1200000);
+        // stake.checkCurrentRewards(address(this));
+        // // stake.viewUser(address(this));
+        // // emit log_uint(block.timestamp);
+
+        // // stake.claimHydro();
+        // vm.warp(block.timestamp + 7 days);
+        // stake.claimHydro();
+        // stake.checkAPY();
+        // // stake.checkCurrentRewards(address(this));
+        // // stake.viewUser(address(this));
+        // // stake.totalHydroStaked();
+        // stake.exit();
+        // stake.checkAPY();
     }
 }
